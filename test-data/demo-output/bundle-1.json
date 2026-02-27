@@ -1,0 +1,167 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "identifier": {
+    "system": "https://example-hsp.local/claim",
+    "value": "CLM-DEMO-1"
+  },
+  "meta": {
+    "profile": [
+      "https://nhcx.abdm.gov.in/fhir/StructureDefinition/NHCX-ClaimBundle"
+    ]
+  },
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-1",
+        "identifier": [
+          {
+            "system": "https://example-hsp.local/patient-id",
+            "value": "AUTO-DEADCAE"
+          }
+        ],
+        "name": [
+          {
+            "text": "Unknown Patient"
+          }
+        ],
+        "gender": "unknown",
+        "extension": [
+          {
+            "url": "https://example-hsp.local/fhir/StructureDefinition/inferred-demographics",
+            "extension": [
+              {
+                "url": "identifier",
+                "valueBoolean": true
+              },
+              {
+                "url": "name",
+                "valueBoolean": true
+              },
+              {
+                "url": "gender",
+                "valueBoolean": true
+              },
+              {
+                "url": "address",
+                "valueBoolean": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "encounter-1",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient"
+        },
+        "subject": {
+          "reference": "Patient/patient-1"
+        },
+        "period": {
+          "start": "2026-02-27",
+          "end": null
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "condition-1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-1"
+        },
+        "code": {
+          "text": "Unknown diagnosis"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Composition",
+        "id": "composition-1",
+        "status": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "34117-2",
+              "display": "Discharge summary"
+            }
+          ],
+          "text": "Discharge Summary"
+        },
+        "subject": {
+          "reference": "Patient/patient-1"
+        },
+        "date": "2026-02-27T07:35:36.114Z",
+        "title": "Discharge Summary",
+        "author": [],
+        "section": [
+          {
+            "title": "Final Diagnosis",
+            "text": {
+              "status": "generated",
+              "div": "<div>Unknown diagnosis</div>"
+            },
+            "entry": [
+              {
+                "reference": "Condition/condition-1"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "source-doc-1",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "34117-2",
+              "display": "Discharge summary"
+            }
+          ],
+          "text": "Discharge Summary"
+        },
+        "subject": {
+          "reference": "Patient/patient-1"
+        },
+        "identifier": [
+          {
+            "system": "urn:sha256",
+            "value": "demo-hash-discharge"
+          }
+        ],
+        "description": "discharge-summary.pdf"
+      }
+    }
+  ]
+}

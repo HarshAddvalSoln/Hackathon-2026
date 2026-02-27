@@ -1,0 +1,16 @@
+{
+  "name": "@hc-fhir/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and constants for FHIR conversion system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "fhir",
+    "healthcare",
+    "nhcx"
+  ],
+  "license": "MIT",
+  "dependencies": {}
+}

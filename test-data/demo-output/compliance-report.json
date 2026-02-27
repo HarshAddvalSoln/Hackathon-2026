@@ -1,0 +1,20 @@
+{
+  "overallStatus": "pass",
+  "checks": [
+    {
+      "ruleId": "NRCES-ID-01",
+      "title": "Patient identifier policy",
+      "status": "pass"
+    },
+    {
+      "ruleId": "NRCES-AUDIT-01",
+      "title": "Audit trail for core actions",
+      "status": "pass"
+    },
+    {
+      "ruleId": "NRCES-IMM-01",
+      "title": "Immutable source traceability",
+      "status": "pass"
+    }
+  ]
+}

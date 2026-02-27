@@ -1,0 +1,33 @@
+{
+  "name": "hackathon-fhir-converter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test packages apps scripts/test",
+    "start:api": "node apps/api/src/index.js",
+    "start:frontend": "npm --workspace @hackathon/frontend run dev",
+    "build:frontend": "npm --workspace @hackathon/frontend run build",
+    "start:demo": "node scripts/start-demo.js",
+    "benchmark": "node scripts/benchmark.js",
+    "demo:generate": "node scripts/generate-demo-output.js",
+    "ocr:worker": "node apps/ocr-worker/src/server.js",
+    "start:all": "node scripts/start-demo.js",
+    "start:backend": "node scripts/start-all.js",
+    "lint": "eslint . --ext .js,.mjs",
+    "lint:fix": "eslint . --ext .js,.mjs --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "husky": "9.1.7"
+  }
+}

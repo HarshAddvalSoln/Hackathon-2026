@@ -1,0 +1,24 @@
+#!/bin/sh
+# Husky pre-commit hook
+
+echo "Running pre-commit checks..."
+
+# Run ESLint
+npm run lint
+
+# Check for lint errors
+if [ $? -ne 0 ]; then
+  echo "Lint errors found. Aborting commit."
+  exit 1
+fi
+
+# Run prettier check
+npm run format:check
+
+if [ $? -ne 0 ]; then
+  echo "Formatting issues found. Run 'npm run format' to fix."
+  exit 1
+fi
+
+echo "Pre-commit checks passed!"
+exit 0

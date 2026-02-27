@@ -1,0 +1,39 @@
+[
+  {
+    "fileName": "discharge-summary.pdf",
+    "hiType": "discharge_summary",
+    "status": "pass",
+    "confidenceScore": 1,
+    "lowConfidence": false,
+    "sourceMode": "provided",
+    "textLength": 155,
+    "missingRequiredFields": [],
+    "extracted": {
+      "patientName": "Raj Mehta",
+      "patientLocalId": "ALPHA-1001",
+      "admissionDate": "2026-02-20",
+      "dischargeDate": "2026-02-23",
+      "finalDiagnosis": "Viral Fever"
+    },
+    "extractionDiagnostics": null
+  },
+  {
+    "fileName": "diagnostic-report.pdf",
+    "hiType": "diagnostic_report",
+    "status": "pass",
+    "confidenceScore": 1,
+    "lowConfidence": false,
+    "sourceMode": "provided",
+    "textLength": 132,
+    "missingRequiredFields": [],
+    "extracted": {
+      "patientName": "Raj Mehta",
+      "patientLocalId": "ALPHA-1001",
+      "testName": "Hemoglobin",
+      "resultValue": "12.4 g/dL",
+      "observationDate": "2026-02-22",
+      "observations": []
+    },
+    "extractionDiagnostics": null
+  }
+]
