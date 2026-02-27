@@ -1,5 +1,7 @@
 # Clinical Documents to FHIR Converter (ABDM/NHCX)
 
+GitHub Repository: [https://github.com/HarshAddvalSoln/Hackathon-2026](https://github.com/HarshAddvalSoln/Hackathon-2026)
+
 Open-source Node.js service for converting PDF-derived clinical content (Discharge Summary and Diagnostic Report) into NHCX-aligned FHIR claim bundles.
 
 ## What This Solves
@@ -48,19 +50,57 @@ scripts/
 
 ## Quick Start
 
-1. Run tests:
+### Prerequisites
+- Node.js 20+ and npm
+
+### Installation
 ```bash
-npm test
+npm install
 ```
 
-2. Start single API service (OCR is in-process):
+### Running the Project
+
+#### Option 1: Start All Services (Recommended)
+Runs frontend, API, and OCR worker together:
+```bash
+npm run start:all
+```
+
+This starts:
+- **API** at `http://127.0.0.1:3000`
+- **OCR Worker** at `http://127.0.0.1:8081`
+- **Frontend** at `http://127.0.0.1:5173`
+
+Open your browser to `http://127.0.0.1:5173` and upload PDF files to convert them to FHIR format.
+
+#### Option 2: Individual Services
+
+**Backend only (API + OCR):**
+```bash
+npm run start:backend
+```
+
+**Frontend only:**
+```bash
+npm run start:frontend
+```
+Then open `http://127.0.0.1:5173`
+
+**API only (includes in-process OCR):**
 ```bash
 npm run start:api
 ```
-No env setup is required for default local run.
-Optional overrides can be set in `.env` or shell env.
 
-Optional OCR tuning envs:
+**OCR worker only:**
+```bash
+npm run ocr:worker
+```
+
+### Environment Variables (Optional)
+
+Create a `.env` file in the root directory. Default values work for local development.
+
+**OCR Configuration:**
 ```bash
 OCR_MAX_PAGES=5
 OCR_PDF_DPI=300
@@ -68,7 +108,7 @@ MEDGEMMA_REQUEST_TIMEOUT_MS=60000
 MEDGEMMA_PAGE_RETRIES=2
 ```
 
-Optional LLM fallback (hybrid extraction) envs:
+**LLM Fallback (Hybrid Extraction):**
 ```bash
 LLM_FALLBACK_ENABLED=true
 LLM_FALLBACK_BASE_URL=http://127.0.0.1:11434
@@ -76,48 +116,32 @@ LLM_FALLBACK_MODEL=gemma3:4b
 LLM_FALLBACK_TIMEOUT_MS=45000
 ```
 
-First-time model setup (Ollama):
+First-time Ollama setup:
 ```bash
+# macOS
 brew install ollama
 brew services start ollama
+
+# Pull the model
 ollama pull gemma3:4b
 ```
 
-3. Start hackathon UI (React):
-```bash
-npm run start:frontend
-```
-Open `http://127.0.0.1:5173` and upload one or more PDFs.
+### Testing & Demo
 
-4. One-command full stack (frontend + API + OCR):
+**Run tests:**
 ```bash
-npm run start:all
-```
-This starts:
-- API at `http://127.0.0.1:3000`
-- OCR worker at `http://127.0.0.1:8081`
-- React frontend at `http://127.0.0.1:5173`
-
-Backend-only launcher (API + OCR):
-```bash
-npm run start:backend
+npm test
 ```
 
-5. Run benchmark:
+**Run benchmark:**
 ```bash
 npm run benchmark
 ```
 
-6. Generate demo outputs:
+**Generate demo outputs:**
 ```bash
 npm run demo:generate
 ```
-
-Generated sample outputs:
-- `test-data/demo-output/bundle-1.json`
-- `test-data/demo-output/bundle-2.json`
-- `test-data/demo-output/compliance-report.json`
-- `test-data/demo-output/extraction-report.json`
 
 ## API Contract
 
