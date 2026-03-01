@@ -3,13 +3,15 @@
  * Normalizes incoming request data
  */
 
+const { readFile } = require('node:fs/promises');
+
 /**
  * Normalize documents input from request
  * @param {Object} body - Request body
  * @param {Object[]} files - Uploaded files
  * @returns {Object} Normalized body
  */
-function normalizeDocumentsInput(body, files) {
+async function normalizeDocumentsInput(body, files) {
   const mergedBody = { ...(body || {}) };
 
   // Parse documents if it's a JSON string
@@ -21,10 +23,24 @@ function normalizeDocumentsInput(body, files) {
     }
   }
 
-  // Convert uploaded files to document format
-  const fileDocuments = (files || []).map((file) => ({
-    fileName: file.fileName,
-    filePath: file.filePath,
+  // Convert uploaded files to document format with base64 content
+  const fileDocuments = await Promise.all((files || []).map(async (file) => {
+    const doc = {
+      fileName: file.originalFilename || file.filename || 'unknown.pdf',
+    };
+
+    // Read file content if filePath exists
+    if (file.filePath) {
+      try {
+        const fileContent = await readFile(file.filePath);
+        doc.base64Pdf = fileContent.toString('base64');
+        doc.contentType = 'application/pdf';
+      } catch (err) {
+        console.error('Failed to read file:', err.message);
+      }
+    }
+
+    return doc;
   }));
 
   // Ensure documents is an array

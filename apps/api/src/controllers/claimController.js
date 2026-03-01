@@ -33,7 +33,7 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
   logger.info('Processing claim conversion', {
     jobId,
     claimId,
-    documentsCount: documents.length,
+    documentsCount: documents.length
   });
 
   try {
@@ -42,14 +42,14 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
       documents,
       hospitalId,
       extractionEngine,
-      llmFallback,
+      llmFallback
     });
 
     logger.info('Claim conversion completed', {
       jobId,
       claimId,
       bundlesCount: output.bundles?.length || 0,
-      durationMs: Date.now() - startTime,
+      durationMs: Date.now() - startTime
     });
 
     return {
@@ -57,8 +57,8 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
       body: {
         jobId,
         status: 'completed',
-        output,
-      },
+        output
+      }
     };
   } catch (error) {
     logger.error('Claim conversion failed', {
@@ -66,7 +66,7 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
       claimId,
       error: error.message,
       code: error.code,
-      durationMs: Date.now() - startTime,
+      durationMs: Date.now() - startTime
     });
 
     if (error instanceof ExtractionError || error.code === 'DOCUMENT_EXTRACTION_FAILED') {
@@ -77,9 +77,9 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
           details: {
             fileName: error.fileName || null,
             reason: error.reason || error.message || 'document_extraction_failed',
-            metadata: error.details?.metadata || null,
-          },
-        },
+            metadata: error.details?.metadata || null
+          }
+        }
       };
     }
 
@@ -88,8 +88,8 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
         statusCode: 400,
         body: {
           error: 'validation_error',
-          details: error.validationErrors || [],
-        },
+          details: error.validationErrors || []
+        }
       };
     }
 
@@ -97,8 +97,8 @@ async function handleConvertClaim({ body, extractionEngine, llmFallback }) {
       statusCode: 500,
       body: {
         error: 'conversion_failed',
-        message: error.message,
-      },
+        message: error.message
+      }
     };
   }
 }
@@ -118,8 +118,8 @@ function handleGetJobStatus({ jobId, jobs }) {
       statusCode: 404,
       body: {
         error: 'job_not_found',
-        jobId,
-      },
+        jobId
+      }
     };
   }
 
@@ -130,8 +130,8 @@ function handleGetJobStatus({ jobId, jobs }) {
       status: job.status,
       createdAt: job.createdAt,
       completedAt: job.completedAt || null,
-      output: job.output || null,
-    },
+      output: job.output || null
+    }
   };
 }
 
@@ -162,7 +162,7 @@ function createClaimController(options = {}) {
         return handleConvertClaim({
           body,
           extractionEngine: extractionService?.getEngine(),
-          llmFallback,
+          llmFallback
         });
       }
 
@@ -175,7 +175,7 @@ function createClaimController(options = {}) {
       // 404 for other routes
       return {
         statusCode: 404,
-        body: { error: 'not_found', path: normalizedUrl },
+        body: { error: 'not_found', path: normalizedUrl }
       };
     },
 
@@ -185,7 +185,7 @@ function createClaimController(options = {}) {
      */
     getJobs() {
       return jobs;
-    },
+    }
   };
 }
 
@@ -207,5 +207,5 @@ function normalizeUrl(url) {
 module.exports = {
   handleConvertClaim,
   handleGetJobStatus,
-  createClaimController,
+  createClaimController
 };

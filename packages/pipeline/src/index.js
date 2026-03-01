@@ -10,7 +10,7 @@ import { extractStructuredData } from '../../clinical-extractor/src/index.js';
 import { mapToClaimSubmissionBundle } from '../../fhir-mapper/src/index.js';
 import { evaluateCompliance } from '../../compliance/src/index.js';
 import { evaluateDocumentQuality } from '../../quality/src/index.js';
-import { validateClaimBundle } from '../../fhir-validator/src/index.js';
+import { validateClaimBundle, validateClaimBundles } from '../../fhir-validator/src/index.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
@@ -82,7 +82,19 @@ function validateInput({ claimId, documents }) {
   }
 }
 
-function shouldRunLlmEnrichment({ textLength, llmFallback, qualityStatus }) {
+function shouldRunLlmEnrichment({ textLength, llmFallback, qualityStatus, hiType }) {
+  // Always run LLM enrichment for diagnostic reports to fix OCR errors
+  if (hiType === 'diagnostic_report') {
+    if (!llmFallback || typeof llmFallback.enhance !== 'function') {
+      return false;
+    }
+    const config = getConfig();
+    if (!textLength || textLength < config.llmEnrichmentMinTextLength) {
+      return false;
+    }
+    return true;
+  }
+
   if (qualityStatus === 'pass') {
     return false;
   }
@@ -126,6 +138,21 @@ function mergeLlmExtracted(baseExtracted, llmExtracted) {
     'testName',
     'resultValue',
     'observationDate',
+    'patientGender',
+    'patientDob',
+    'patientAddress',
+    'hospitalName',
+    'hospitalAddress',
+    'attendingPhysician',
+    'physicianRegNo',
+    'chiefComplaint',
+    'procedureDone',
+    'medications',
+    'followUp',
+    'interpretation',
+    'payerName',
+    'policyNumber',
+    'memberId',
   ];
   const merged = {
     ...(baseExtracted || {}),
@@ -133,6 +160,11 @@ function mergeLlmExtracted(baseExtracted, llmExtracted) {
   const candidate = llmExtracted && typeof llmExtracted === 'object'
     ? llmExtracted
     : {};
+
+  logInfo('merge_llm_extracted_input', {
+    baseKeys: Object.keys(baseExtracted || {}),
+    candidateKeys: Object.keys(candidate),
+  });
 
   for (const key of scalarKeys) {
     const value = candidate[key];
@@ -145,9 +177,16 @@ function mergeLlmExtracted(baseExtracted, llmExtracted) {
   const candidateObservations = Array.isArray(candidate.observations) ? candidate.observations : [];
   if (candidateObservations.length > 0) {
     merged.observations = candidateObservations.slice(0, config.maxObservationsPerReport);
+    logInfo('merge_llm_observations', {
+      count: merged.observations.length,
+    });
   } else if (!Array.isArray(merged.observations)) {
     merged.observations = [];
   }
+
+  logInfo('merge_llm_extracted_output', {
+    mergedKeys: Object.keys(merged),
+  });
 
   return merged;
 }
@@ -300,7 +339,6 @@ async function convertClaimDocuments({
   });
 
   const classifications = [];
-  const bundles = [];
   const qualityReports = [];
   const extractionReports = [];
   const documentConcurrency = config.documentConcurrency;
@@ -317,8 +355,30 @@ async function convertClaimDocuments({
     logInfo('document_processing_started', {
       fileName: document?.fileName || null,
     });
+
+    // Log document details
+    logInfo('document_input_details', {
+      fileName: document?.fileName || null,
+      hasBase64Pdf: !!document?.base64Pdf,
+      hasText: !!document?.text,
+      hasFilePath: !!document?.filePath,
+      contentType: document?.contentType || null,
+    });
+
     const { text, sourceMode, extractionMetadata } = await resolveDocumentText(document, extractionEngine);
     const textLength = (text || '').trim().length;
+
+    logInfo('document_text_resolved', {
+      fileName: document?.fileName || null,
+      textLength,
+      sourceMode,
+    });
+
+    // Log first 500 chars of extracted text
+    logInfo('document_text_preview', {
+      fileName: document?.fileName || null,
+      textPreview: text?.substring(0, 500) || '',
+    });
 
     const sha256 = await resolveDocumentSha256({
       claimId,
@@ -332,26 +392,54 @@ async function convertClaimDocuments({
       hiType,
     });
 
-    const extracted = extractStructuredData(text);
+    const extracted = extractStructuredData({ hiType, text });
+    logInfo('document_extracted_data', {
+      fileName: document?.fileName || null,
+      extractedKeys: Object.keys(extracted || {}),
+      hasObservations: Array.isArray(extracted?.observations),
+      observationCount: extracted?.observations?.length || 0,
+      patientName: extracted?.patientName || null,
+      patientLocalId: extracted?.patientLocalId || null,
+      testName: extracted?.testName || null,
+      observationDate: extracted?.observationDate || null,
+    });
+
     const quality = evaluateDocumentQuality(extracted, text);
     logInfo('document_quality_evaluated', {
       fileName: document?.fileName || null,
       status: quality.status,
+      score: quality.score,
     });
 
     let enrichedExtracted = extracted;
     let llmExtracted = null;
     let mergedDiagnostics = extractionMetadata;
 
-    if (shouldRunLlmEnrichment({ textLength, llmFallback, qualityStatus: quality.status })) {
+    if (shouldRunLlmEnrichment({ textLength, llmFallback, qualityStatus: quality.status, hiType })) {
+      logInfo('document_llm_enrichment_starting', {
+        fileName: document?.fileName || null,
+        reason: quality.status !== 'pass' ? 'quality_not_pass' : 'diagnostic_report_forced',
+      });
+
       try {
-        const llmResult = await llmFallback.enhance(text);
+        const llmResult = await llmFallback.enhance({ text, hiType, sourceFileName: document?.fileName });
+        logInfo('document_llm_enrichment_result', {
+          fileName: document?.fileName || null,
+          hasExtracted: !!llmResult?.extracted,
+          extractedKeys: llmResult?.extracted ? Object.keys(llmResult.extracted) : [],
+          llmPatientName: llmResult?.extracted?.patientName,
+          llmPatientId: llmResult?.extracted?.patientLocalId,
+        });
         if (llmResult?.extracted) {
           enrichedExtracted = mergeLlmExtracted(extracted, llmResult.extracted);
           mergedDiagnostics = mergeExtractionDiagnostics(extractionMetadata, llmResult.diagnostics);
           llmExtracted = llmResult.extracted;
           logInfo('document_enriched', {
             fileName: document?.fileName || null,
+            patientName: llmResult.extracted.patientName,
+            patientLocalId: llmResult.extracted.patientLocalId,
+            testName: llmResult.extracted.testName,
+            observationsCount: llmResult.extracted.observations?.length || 0,
           });
         }
       } catch (error) {
@@ -362,6 +450,26 @@ async function convertClaimDocuments({
     }
 
     const resolvedHiType = resolveEnrichedHiType(hiType, llmExtracted?.hiType);
+
+    // Log data being sent to FHIR mapper
+    logInfo('document_sending_to_fhir_mapper', {
+      fileName: document?.fileName || null,
+      hiType: resolvedHiType,
+      patientName: enrichedExtracted?.patientName || null,
+      patientLocalId: enrichedExtracted?.patientLocalId || null,
+      patientGender: enrichedExtracted?.patientGender || null,
+      patientDob: enrichedExtracted?.patientDob || null,
+      hospitalName: enrichedExtracted?.hospitalName || null,
+      attendingPhysician: enrichedExtracted?.attendingPhysician || null,
+      testName: enrichedExtracted?.testName || null,
+      observationDate: enrichedExtracted?.observationDate || null,
+      admissionDate: enrichedExtracted?.admissionDate || null,
+      dischargeDate: enrichedExtracted?.dischargeDate || null,
+      finalDiagnosis: enrichedExtracted?.finalDiagnosis || null,
+      observationsCount: enrichedExtracted?.observations?.length || 0,
+      payerName: enrichedExtracted?.payerName || null,
+      policyNumber: enrichedExtracted?.policyNumber || null,
+    });
 
     const bundle = mapToClaimSubmissionBundle({
       claimId,
@@ -391,6 +499,7 @@ async function convertClaimDocuments({
         sha256,
         fileName: document.fileName,
       },
+      extracted: enrichedExtracted, // Include extracted data for frontend display
       extraction: {
         textLength,
         sourceMode,
@@ -415,8 +524,11 @@ async function convertClaimDocuments({
     failed: failed.length,
   });
 
+  const bundles = results.map((r) => r.bundle);
+  const validationReport = validateClaimBundles(bundles);
+
   return {
-    bundles: results.map((r) => r.bundle),
+    bundles,
     metadata: {
       claimId,
       hospitalId: resolvedHospitalId,
@@ -427,6 +539,7 @@ async function convertClaimDocuments({
     },
     results,
     auditLog,
+    validationReport,
   };
 }
 

@@ -15,25 +15,40 @@ try {
   ({ buildEnrichmentPrompt } = await import('./prompts/enrichmentPrompt.js'));
 } catch {
   // Fallback inline prompt builder
-  buildEnrichmentPrompt = (text, hiType) => {
+  buildEnrichmentPrompt = (text, hiType, sourceFileName) => {
     const typeInfo = hiType === 'diagnostic_report'
-      ? 'diagnostic report (lab report, test results)'
-      : 'discharge summary';
-    return `You are a medical document analyzer. Extract structured clinical data from the following ${typeInfo}.
+      ? 'Diagnostic Report (Lab Report)'
+      : hiType === 'discharge_summary'
+        ? 'Discharge Summary'
+        : 'Unknown';
+    const filenameHint = sourceFileName
+      ? `\nFILENAME: "${sourceFileName}" - numbers in filename = Patient ID (e.g., "1002500515.pdf" → patientLocalId: "1002500515")`
+      : '';
 
-Extract these fields if present:
-- patientName, patientLocalId, patientGender, patientDob, patientAddress
-- hospitalName, hospitalAddress, attendingPhysician, physicianRegNo
-- admissionDate, dischargeDate, finalDiagnosis, chiefComplaint, procedureDone, medications
-- testName, resultValue, observationDate, interpretation (for diagnostic reports)
-- payerName, policyNumber, memberId
-- observations array with: name, value, unit
+    return `You are a medical document parser for India's ABDM/NHCX healthcare system.
 
-Return ONLY valid JSON like:
-{"hiType": "${hiType}", "extracted": {"patientName": "John", "admissionDate": "2024-01-15", ...}}
+## TASK
+Extract structured clinical data from this ${typeInfo} for FHIR claim submission.${filenameHint}
 
-Document text:
-${text.slice(0, 8000)}`;
+## INPUT
+${text.slice(0, 8000)}
+
+## RULES
+- Extract ONLY visible data - do NOT hallucinate
+- Use null for missing fields
+- Dates: convert to YYYY-MM-DD
+- Filename numbers = Patient ID
+
+## FIELDS
+patientName, patientLocalId, patientGender, patientDob, patientAddress
+hospitalName, hospitalAddress, attendingPhysician, physicianRegNo
+Diagnostic: testName, observationDate, observations=[{name,value,unit,referenceRange}]
+Discharge: admissionDate, dischargeDate, chiefComplaint, finalDiagnosis, procedureDone
+payerName, policyNumber, memberId
+
+## OUTPUT
+Return ONLY valid JSON:
+{"hiType":"${hiType}","extracted":{"patientName":"JOHN","patientLocalId":"1002500515","testName":"CBC","observationDate":"2026-01-26","observations":[{"name":"Hemoglobin","value":"13.5","unit":"g/dL"}]}}`;
   };
 }
 
@@ -91,10 +106,10 @@ function createOllamaLlmFallback({
     });
 
     try {
-      const promptContent = buildEnrichmentPrompt(promptText, hiType);
+      const promptContent = buildEnrichmentPrompt(promptText, hiType, sourceFileName);
 
       console.log("[llm-fallback] Prompt being sent to LLM:");
-      console.log(promptContent);
+      console.log(promptContent.substring(0, 1000) + "...");
       console.log("[llm-fallback] Model:", model);
 
       logger.debug('LLM prompt prepared', {

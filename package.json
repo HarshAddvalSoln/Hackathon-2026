@@ -25,7 +25,10 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "pdfjs-dist": "^4.10.38"
+    "paddleocr": "1.0.7",
+    "paddlepaddle": "1.0.5",
+    "pdfjs-dist": "^4.10.38",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "husky": "9.1.7"

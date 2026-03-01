@@ -30,6 +30,18 @@ function buildEncounterResource(extracted, patientRef, practitionerRef, organiza
     logger.warn('Encounter: admissionDate missing, using current date');
   }
 
+  const period = {
+    start: admissionDate || new Date().toISOString().split('T')[0],
+  };
+
+  // Only add end if we have a valid discharge date
+  if (dischargeDate) {
+    period.end = dischargeDate;
+  } else if (admissionDate) {
+    // If no discharge date but we have admission, use admission as end (for ongoing encounters)
+    period.end = admissionDate;
+  }
+
   const encounter = {
     resourceType: 'Encounter',
     id: 'encounter-1',
@@ -40,10 +52,7 @@ function buildEncounterResource(extracted, patientRef, practitionerRef, organiza
       display: extracted.encounterType === 'emergency' ? 'emergency' : 'inpatient',
     },
     subject: { reference: `Patient/${patientRef}` },
-    period: {
-      start: admissionDate || new Date().toISOString().split('T')[0],
-      end: dischargeDate || admissionDate,
-    },
+    period,
   };
 
   if (extracted.admissionReason || extracted.finalDiagnosis) {

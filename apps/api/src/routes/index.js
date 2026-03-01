@@ -59,7 +59,7 @@ function createRouteHandler(options = {}) {
     // Normalize documents input (merge files if any)
     const files = req.files || [];
     if (files.length > 0 || body.documents) {
-      body = normalizeDocumentsInput(body, files);
+      body = await normalizeDocumentsInput(body, files);
     }
 
     // Handle request through controller

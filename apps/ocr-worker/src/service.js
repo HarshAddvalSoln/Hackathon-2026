@@ -3,6 +3,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { buildOcrPrompt } from './prompts/ocrPrompt.js';
+import { createTesseractOcrEngine } from './tesseractOcrEngine.js';
+
+const OCR_ENGINE = process.env.OCR_ENGINE || 'tesseract';
 
 function logError(event, error, meta = {}) {
   // eslint-disable-next-line no-console
@@ -763,7 +766,10 @@ export function createMedGemmaOcrEngine({
 }
 
 export function createDefaultOcrEngine() {
-  return createMedGemmaOcrEngine();
+  if (OCR_ENGINE === 'medgemma') {
+    return createMedGemmaOcrEngine();
+  }
+  return createTesseractOcrEngine();
 }
 
 export function createOcrWorkerService({ ocrEngine } = {}) {

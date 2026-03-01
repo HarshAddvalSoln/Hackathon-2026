@@ -18,6 +18,43 @@ function isNonEmptyString(value) {
 }
 
 /**
+ * Check if a string looks like garbled OCR text
+ * Garbled strings contain unusual character patterns, repeated chars, or random mixes
+ * @param {string} value - Value to check
+ * @returns {boolean} True if looks garbage
+ */
+function looksGarbage(value) {
+  if (!isNonEmptyString(value)) return false;
+
+  const trimmed = value.trim();
+
+  // Too short to judge
+  if (trimmed.length < 2) return false;
+
+  // Check for common garbage patterns
+  const garbagePatterns = [
+    /^[A-Z]{5,}\s+[A-Z]{3,}\s*[A-Z]{3,}/i,  // "ESEEESNSH Last Name: Gendor:"
+    /^[A-Z]{5,}\s+[A-Z]{3,}?:/i,              // Pattern before colon
+    /\b(Gender|Gendor|Genor)\b.*:/i,          // Partial words like "Gendor"
+    /[0-9]{4,}/,                              // Too many digits
+    /^[^a-zA-Z]*$/,                           // No letters at all
+  ];
+
+  for (const pattern of garbagePatterns) {
+    if (pattern.test(trimmed)) return true;
+  }
+
+  // Check for high ratio of uppercase to mixed case (suspicious)
+  const uppercaseRatio = (trimmed.match(/[A-Z]/g) || []).length / trimmed.length;
+  if (uppercaseRatio > 0.9 && trimmed.length > 10) return true;
+
+  // Check for repeated characters (e.g., "AAAAA", "SSSSS")
+  if (/(.)\1{4,}/.test(trimmed)) return true;
+
+  return false;
+}
+
+/**
  * Parse Ollama response content
  * @param {Object} payload - Ollama response payload
  * @returns {string} Parsed content
@@ -116,11 +153,15 @@ function sanitizeObservation(item) {
   const value = asStringOrNull(item.value);
   const unit = asStringOrNull(item.unit);
 
-  if (!name || !value) {
+  // Filter out garbage observations
+  if (!name || !value || looksGarbage(name) || looksGarbage(value)) {
     return null;
   }
 
-  return { name, value, unit: unit || '' };
+  // Filter out invalid units (like "Patient" which is garbage)
+  const validUnit = unit && !looksGarbage(unit) && unit.length < 20 ? unit : '';
+
+  return { name, value, unit: validUnit };
 }
 
 /**
@@ -136,29 +177,35 @@ function sanitizeFallbackPayload(payload) {
   const extractedData = payload.extracted || payload;
   const hiType = normalizeHiType(payload.hiType);
 
+  // Helper to get string or null, filtering garbage
+  const cleanString = (value) => {
+    const str = asStringOrNull(value);
+    return str && !looksGarbage(str) ? str : null;
+  };
+
   const extracted = {
-    patientName: asStringOrNull(extractedData.patientName),
-    patientLocalId: asStringOrNull(extractedData.patientLocalId),
-    patientGender: asStringOrNull(extractedData.patientGender),
-    patientDob: asStringOrNull(extractedData.patientDob),
-    patientAddress: asStringOrNull(extractedData.patientAddress),
-    hospitalName: asStringOrNull(extractedData.hospitalName),
-    hospitalAddress: asStringOrNull(extractedData.hospitalAddress),
-    attendingPhysician: asStringOrNull(extractedData.attendingPhysician),
-    physicianRegNo: asStringOrNull(extractedData.physicianRegNo),
-    admissionDate: asStringOrNull(extractedData.admissionDate),
-    dischargeDate: asStringOrNull(extractedData.dischargeDate),
-    finalDiagnosis: asStringOrNull(extractedData.finalDiagnosis),
-    chiefComplaint: asStringOrNull(extractedData.chiefComplaint),
-    procedureDone: asStringOrNull(extractedData.procedureDone),
-    medications: asStringOrNull(extractedData.medications),
-    testName: asStringOrNull(extractedData.testName),
-    resultValue: asStringOrNull(extractedData.resultValue),
-    observationDate: asStringOrNull(extractedData.observationDate),
-    interpretation: asStringOrNull(extractedData.interpretation),
-    payerName: asStringOrNull(extractedData.payerName),
-    policyNumber: asStringOrNull(extractedData.policyNumber),
-    memberId: asStringOrNull(extractedData.memberId),
+    patientName: cleanString(extractedData.patientName),
+    patientLocalId: cleanString(extractedData.patientLocalId),
+    patientGender: cleanString(extractedData.patientGender),
+    patientDob: cleanString(extractedData.patientDob),
+    patientAddress: cleanString(extractedData.patientAddress),
+    hospitalName: cleanString(extractedData.hospitalName),
+    hospitalAddress: cleanString(extractedData.hospitalAddress),
+    attendingPhysician: cleanString(extractedData.attendingPhysician),
+    physicianRegNo: cleanString(extractedData.physicianRegNo),
+    admissionDate: cleanString(extractedData.admissionDate),
+    dischargeDate: cleanString(extractedData.dischargeDate),
+    finalDiagnosis: cleanString(extractedData.finalDiagnosis),
+    chiefComplaint: cleanString(extractedData.chiefComplaint),
+    procedureDone: cleanString(extractedData.procedureDone),
+    medications: cleanString(extractedData.medications),
+    testName: cleanString(extractedData.testName),
+    resultValue: cleanString(extractedData.resultValue),
+    observationDate: cleanString(extractedData.observationDate),
+    interpretation: cleanString(extractedData.interpretation),
+    payerName: cleanString(extractedData.payerName),
+    policyNumber: cleanString(extractedData.policyNumber),
+    memberId: cleanString(extractedData.memberId),
     observations: Array.isArray(extractedData.observations)
       ? extractedData.observations.map(sanitizeObservation).filter(Boolean).slice(0, 25)
       : [],

@@ -7,6 +7,8 @@ import { createLogger } from '@hc-fhir/shared';
 
 const logger = createLogger('llm-fallback:ollama-client');
 
+const DEFAULT_TIMEOUT_MS = 120000; // 2 minutes timeout
+
 /**
  * Create an Ollama HTTP client
  * @param {Object} options - Options
@@ -19,6 +21,7 @@ function createOllamaClient({
   baseUrl = 'http://127.0.0.1:11434',
   model = 'gemma3:4b',
   fetchImpl = fetch,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
 } = {}) {
   /**
    * Send a chat request to Ollama
@@ -34,7 +37,7 @@ function createOllamaClient({
       format: 'json',
       options: {
         temperature: 0,
-        num_predict: 4096,
+        num_predict: 1024, // Reduced for faster response
         top_p: 0.9,
         ...options,
       },
@@ -44,13 +47,23 @@ function createOllamaClient({
     logger.debug('Sending chat request to Ollama', {
       model,
       promptLength: prompt.length,
+      timeoutMs,
     });
+
+    // Create abort controller for timeout
+    const controller = typeof AbortController !== 'undefined'
+      ? new AbortController()
+      : null;
+    const timeoutId = controller
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
 
     try {
       const response = await fetchImpl(`${baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: controller?.signal,
       });
 
       if (!response.ok) {
@@ -65,11 +78,17 @@ function createOllamaClient({
 
       return payload;
     } catch (error) {
+      if (error.name === 'AbortError') {
+        logger.error('Ollama request timed out', { model, timeoutMs });
+        throw new Error(`LLM request timed out after ${timeoutMs}ms`);
+      }
       logger.error('Ollama chat request failed', {
         error: error.message,
         model,
       });
       throw error;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 

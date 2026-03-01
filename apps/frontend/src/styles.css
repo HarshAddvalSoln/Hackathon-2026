@@ -817,3 +817,332 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+/* FHIR Preview Tab Styles */
+.preview-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bundle-preview {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.bundle-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.bundle-preview-header h3 {
+  color: var(--brand);
+}
+
+.bundle-type {
+  background: var(--pass-bg);
+  color: var(--pass-fg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.preview-section {
+  background: var(--panel-strong);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.preview-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preview-icon {
+  font-size: 1.25rem;
+}
+
+.preview-section-header h4 {
+  margin: 0;
+  color: var(--brand-2);
+  font-size: 1rem;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.preview-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-value {
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.status-badge {
+  background: var(--pass-bg);
+  color: var(--pass-fg);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+.preview-conclusion {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Observations Grid */
+.observations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.observation-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  position: relative;
+}
+
+.observation-name {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.observation-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.observation-range {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.interpretation-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.interpretation-badge.normal,
+.interpretation-badge.n {
+  background: var(--pass-bg);
+  color: var(--pass-fg);
+}
+
+.interpretation-badge.high,
+.interpretation-badge.h {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.interpretation-badge.low,
+.interpretation-badge.l {
+  background: rgba(99, 179, 237, 0.22);
+  color: #7dd3fc;
+}
+
+/* Conditions Grid */
+.conditions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.condition-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.condition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.condition-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.condition-category {
+  font-size: 0.7rem;
+  background: rgba(56, 193, 179, 0.2);
+  color: var(--brand);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.condition-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Procedures Grid */
+.procedures-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.procedure-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.procedure-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.procedure-icon {
+  font-size: 1rem;
+}
+
+.procedure-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.procedure-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.procedure-status {
+  background: var(--pass-bg);
+  color: var(--pass-fg);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+/* Composition Sections */
+.composition-sections {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.composition-section-item {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.composition-section-item strong {
+  color: var(--brand-2);
+  margin-right: 0.5rem;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  margin: 1.5rem 0;
+}
+
+.progress-bar-wrapper {
+  height: 8px;
+  background: var(--panel-strong);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.waiting {
+  animation: pulse-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-progress {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-percentage {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.progress-step {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Step completion */
+.ai-steps li.step-complete {
+  color: var(--pass-fg);
+}
+
+.ai-steps li.step-complete::before {
+  content: "✓ ";
+  color: var(--pass-fg);
+}

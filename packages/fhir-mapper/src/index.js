@@ -33,7 +33,45 @@ function mapToClaimSubmissionBundle({
   sourceDocument = {},
 }) {
   logger.info('=== Starting FHIR Bundle Generation ===', { claimId, hiType });
-  logger.debug('Extracted data keys:', Object.keys(extracted));
+  logger.info('FHIR_MAPPER_INPUT', {
+    claimId,
+    hiType,
+    extractedKeys: Object.keys(extracted),
+    patientName: extracted?.patientName || null,
+    patientLocalId: extracted?.patientLocalId || null,
+    patientGender: extracted?.patientGender || null,
+    patientDob: extracted?.patientDob || null,
+    hospitalName: extracted?.hospitalName || null,
+    hospitalAddress: extracted?.hospitalAddress || null,
+    attendingPhysician: extracted?.attendingPhysician || null,
+    testName: extracted?.testName || null,
+    observationDate: extracted?.observationDate || null,
+    admissionDate: extracted?.admissionDate || null,
+    dischargeDate: extracted?.dischargeDate || null,
+    chiefComplaint: extracted?.chiefComplaint || null,
+    finalDiagnosis: extracted?.finalDiagnosis || null,
+    procedureDone: extracted?.procedureDone || null,
+    medications: extracted?.medications || null,
+    followUp: extracted?.followUp || null,
+    observationsCount: extracted?.observations?.length || 0,
+    payerName: extracted?.payerName || null,
+    policyNumber: extracted?.policyNumber || null,
+    memberId: extracted?.memberId || null,
+  });
+
+  // Log observations if present
+  if (extracted?.observations?.length > 0) {
+    logger.info('FHIR_MAPPER_OBSERVATIONS', {
+      claimId,
+      count: extracted.observations.length,
+      observations: extracted.observations.slice(0, 5).map(o => ({
+        name: o.name,
+        value: o.value,
+        unit: o.unit,
+        referenceRange: o.referenceRange,
+      })),
+    });
+  }
 
   // Validate required inputs
   if (!claimId) {
@@ -129,6 +167,32 @@ function mapToClaimSubmissionBundle({
     totalResources: resources.length,
     resourceTypes: resources.map((r) => r.resourceType).join(', '),
     profile: NHCX_PROFILE_URL,
+  });
+
+  // Log details of each resource
+  resources.forEach((resource) => {
+    if (resource.resourceType === 'Patient') {
+      logger.info('FHIR_RESOURCE_Patient', {
+        id: resource.id,
+        identifier: resource.identifier?.[0]?.value,
+        name: resource.name?.[0]?.text,
+        gender: resource.gender,
+        birthDate: resource.birthDate,
+      });
+    } else if (resource.resourceType === 'Observation') {
+      logger.info('FHIR_RESOURCE_Observation', {
+        id: resource.id,
+        code: resource.code?.text,
+        value: resource.valueQuantity?.value || resource.valueString,
+        unit: resource.valueQuantity?.unit,
+      });
+    } else if (resource.resourceType === 'DiagnosticReport') {
+      logger.info('FHIR_RESOURCE_DiagnosticReport', {
+        id: resource.id,
+        testName: resource.code?.text,
+        observationCount: resource.result?.length || 0,
+      });
+    }
   });
 
   return bundle;

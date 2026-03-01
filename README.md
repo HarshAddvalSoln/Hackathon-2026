@@ -8,6 +8,8 @@ Open-source Node.js service for converting PDF-derived clinical content (Dischar
 
 - Converts unstructured clinical document content into structured FHIR.
 - Supports claim-submission workflow with multi-document input.
+- Multiple OCR engines for text extraction from PDFs/images.
+- LLM-powered enrichment for improved data extraction accuracy.
 - Produces:
   - `FHIR Bundle`
   - `complianceReport` (NRCeS-focused checks)
@@ -16,43 +18,50 @@ Open-source Node.js service for converting PDF-derived clinical content (Dischar
 
 ## Current Capability
 
-- HI type detection:
+- **HI type detection:**
   - `discharge_summary`
   - `diagnostic_report`
-- Config-driven hospital templates:
+- **Config-driven hospital templates:**
   - `default`
   - `hsp-alpha` (alias support like `IP No`, `Diagnosis at Discharge`)
-- Adapter-based extraction flow:
-  - digital adapter path
-  - OCR adapter path
-- Strict request validation with field-level errors.
-- TDD-first coverage across pipeline, API, compliance, validation, and benchmark/demo scripts.
+- **Multiple OCR Engines:**
+  - MedGemma (LLaVA-based vision model via Ollama) - primary
+  - Tesseract.js - fallback
+  - PaddleOCR - fallback
+- **LLM Enrichment:**
+  - Uses Ollama for data extraction enrichment
+  - Supports MedGemma, Gemma 3, and other models
+  - Automatic fallback when primary model unavailable
+- **Strict request validation** with field-level errors.
+- **TDD-first coverage** across pipeline, API, compliance, validation, and benchmark/demo scripts.
 
 ## Project Layout
 
 ```text
 apps/
-  api/
+  api/                    # Express API server
+  frontend/               # React + Vite frontend
+  ocr-worker/             # OCR processing service
 packages/
-  clinical-extractor/
-  compliance/
-  config/
-  doc-classifier/
-  extraction-engine/
-  fhir-mapper/
-  fhir-validator/
-  pipeline/
-  quality/
-scripts/
-  benchmark.js
-  generate-demo-output.js
+  clinical-extractor/     # Extracts structured data from text
+  compliance/             # NRCeS compliance checks
+  config/                 # Hospital templates and configuration
+  doc-classifier/          # HI type classification
+  extraction-engine/       # Text extraction orchestration
+  fhir-mapper/             # Maps to FHIR ClaimSubmission bundle
+  fhir-validator/         # FHIR bundle validation
+  llm-fallback/           # LLM enrichment via Ollama
+  pipeline/               # Main conversion pipeline orchestrator
+  quality/                # Quality evaluation
+  shared/                 # Shared utilities
 ```
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 20+ and npm
+- Node.js 20+ and npm/pnpm
+- Ollama (for MedGemma OCR and LLM enrichment)
 
 ### Installation
 
@@ -110,12 +119,21 @@ npm run ocr:worker
 
 Create a `.env` file in the root directory. Default values work for local development.
 
-**OCR Configuration:**
+**OCR Engine Selection:**
 
 ```bash
+OCR_ENGINE=medgemma  # Options: medgemma, tesseract, paddle
+```
+
+**MedGemma OCR Configuration:**
+
+```bash
+MEDGEMMA_BASE_URL=http://127.0.0.1:11434
+MEDGEMMA_MODEL=dcarrascosa/medgemma-1.5-4b-it:Q8_0
 OCR_MAX_PAGES=5
 OCR_PDF_DPI=300
-MEDGEMMA_REQUEST_TIMEOUT_MS=60000
+OCR_PAGE_CONCURRENCY=2
+MEDGEMMA_REQUEST_TIMEOUT_MS=180000
 MEDGEMMA_PAGE_RETRIES=2
 ```
 
@@ -135,7 +153,8 @@ First-time Ollama setup:
 brew install ollama
 brew services start ollama
 
-# Pull the model
+# Pull models
+ollama pull dcarrascosa/medgemma-1.5-4b-it:Q8_0
 ollama pull gemma3:4b
 ```
 
@@ -183,7 +202,7 @@ Request:
 
 If `text` is not sent for a document, pipeline uses in-process extraction engine:
 
-- OCR-first path for PDFs/images (MedGemma)
+- OCR-first path for PDFs/images (MedGemma by default)
 - No separate OCR worker server required for API usage
 
 Response (single-call conversion, synchronous):
@@ -231,24 +250,50 @@ Optional retrieval endpoint. Response includes:
 - Core resource checks (`Patient`, `DocumentReference`, identifier integrity).
 - Resource-link checks (`DiagnosticReport.result` -> `Observation`, subject reference integrity, duplicate IDs).
 
+## Architecture Overview
+
+### OCR Processing Flow
+
+1. **Input**: PDF, image (PNG/JPG), or base64-encoded content
+2. **Engine Selection**: Configurable via `OCR_ENGINE` env var
+3. **Processing**:
+   - PDF → Convert to PNG pages via pdftoppm
+   - Images → Process directly
+4. **Output**: Extracted text with confidence score
+
+### LLM Enrichment Flow
+
+1. **Trigger**: Automatic on low quality scores or for diagnostic reports
+2. **Model**: Uses Ollama (configurable model)
+3. **Enhancement**: Fixes OCR errors, extracts additional fields
+4. **Merge**: Combines with base extraction, preferring non-empty values
+
+### FHIR Mapping
+
+- Converts structured extraction to NHCX-aligned ClaimSubmission bundle
+- Includes Patient, Encounter, Condition, Observation, DocumentReference
+- Generates proper FHIR resource references
+
 ## Why This Is Hackathon-Ready
 
 - Aligned to problem statement scope: Claim submission + HI type conversion.
 - Config-driven reusability for HMIS/hospital variation.
+- Multiple OCR engines for flexibility and reliability.
 - Explicit confidence + quality reporting for operational trust.
+- LLM-powered enrichment for improved accuracy.
 - Traceability artifacts for interoperability and audit expectations.
 - Includes benchmark and demo-output tooling for judge walkthrough.
-- Supports adapter-based real extraction integration (`pdfjs-dist` + OCR worker architecture).
+- Supports adapter-based extraction integration (`pdfjs-dist` + OCR worker architecture).
 
 ## Next Engineering Extensions
 
 1. Replace stub adapters with production extraction:
-
-- `pdfjs-dist` token extraction in digital adapter.
-- OCR worker integration in OCR adapter.
+   - `pdfjs-dist` token extraction in digital adapter.
+   - OCR worker integration in OCR adapter.
 
 2. Expand resource-level FHIR profile checks:
-
-- `Condition`, `Observation`, `Encounter`, references and cardinality.
+   - `Condition`, `Observation`, `Encounter`, references and cardinality.
 
 3. Add async queue worker + persistent job store for scale.
+
+4. Integrate additional LLM models for specific extraction tasks.
