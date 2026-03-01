@@ -173,7 +173,7 @@ function getProfileForDocumentType(docType) {
   return profileMap[docType] || FHIR.CLAIM_BUNDLE_URL;
 }
 
-module.exports = {
+export {
   FHIR,
   getProfileForDocumentType,
 };

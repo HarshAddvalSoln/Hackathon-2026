@@ -41,4 +41,4 @@ class EnrichmentError extends Error {
   }
 }
 
-module.exports = EnrichmentError;
+export default EnrichmentError;

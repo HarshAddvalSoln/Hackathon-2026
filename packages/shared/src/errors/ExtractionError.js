@@ -43,4 +43,4 @@ class ExtractionError extends Error {
   }
 }
 
-module.exports = ExtractionError;
+export default ExtractionError;

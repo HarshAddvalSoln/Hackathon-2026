@@ -2,12 +2,12 @@
  * String normalization utilities for clinical data processing
  */
 
-const TITLE_TOKENS = new Set([
+export const TITLE_TOKENS = new Set([
   'mr', 'mrs', 'ms', 'miss', 'dr', 'prof', 'sir', 'madam',
   'mr.', 'mrs.', 'ms.', 'miss.', 'dr.', 'prof.', 'sir.', 'madam.',
 ]);
 
-const INVALID_TOKENS = new Set([
+export const INVALID_TOKENS = new Set([
   'na', 'n/a', 'nil', 'none', 'unknown', 'unknown', 'not', 'available',
   'data', 'not Applicable', 'not', 'specified',
 ]);
@@ -20,7 +20,7 @@ const INVALID_TOKENS = new Set([
  * @param {string} token - Token to normalize
  * @returns {string} Normalized token
  */
-function normalizeToken(token) {
+export function normalizeToken(token) {
   if (!token || typeof token !== 'string') {
     return '';
   }
@@ -35,7 +35,7 @@ function normalizeToken(token) {
  * @param {string} name - Patient name
  * @returns {string} Normalized name
  */
-function normalizePatientName(name) {
+export function normalizePatientName(name) {
   if (!name || typeof name !== 'string') {
     return '';
   }
@@ -54,7 +54,7 @@ function normalizePatientName(name) {
  * @param {string} id - Patient ID
  * @returns {string} Normalized ID
  */
-function normalizePatientId(id) {
+export function normalizePatientId(id) {
   if (!id || typeof id !== 'string') {
     return '';
   }
@@ -70,7 +70,7 @@ function normalizePatientId(id) {
  * @param {string} hiType - HI type string
  * @returns {string} Normalized HI type
  */
-function normalizeHiType(hiType) {
+export function normalizeHiType(hiType) {
   if (!hiType || typeof hiType !== 'string') {
     return 'unknown';
   }
@@ -149,7 +149,7 @@ function normalizeHiType(hiType) {
  * @param {string} gender - Gender string
  * @returns {string} Normalized gender (male/female/other/unknown)
  */
-function normalizeGender(gender) {
+export function normalizeGender(gender) {
   if (!gender || typeof gender !== 'string') {
     return 'unknown';
   }
@@ -174,7 +174,7 @@ function normalizeGender(gender) {
  * @param {string} phone - Phone number
  * @returns {string} Normalized phone number
  */
-function normalizePhone(phone) {
+export function normalizePhone(phone) {
   if (!phone || typeof phone !== 'string') {
     return '';
   }
@@ -189,7 +189,7 @@ function normalizePhone(phone) {
  * @param {string} email - Email address
  * @returns {string} Normalized email
  */
-function normalizeEmail(email) {
+export function normalizeEmail(email) {
   if (!email || typeof email !== 'string') {
     return '';
   }
@@ -202,7 +202,7 @@ function normalizeEmail(email) {
  * @param {string} token - Token to check
  * @returns {boolean} True if valid name token
  */
-function isValidNameToken(token) {
+export function isValidNameToken(token) {
   if (!token || token.length < 2) {
     return false;
   }
@@ -214,7 +214,7 @@ function isValidNameToken(token) {
  * @param {string} str - String to check
  * @returns {boolean} True if contains name content
  */
-function hasNameContent(str) {
+export function hasNameContent(str) {
   if (!str || typeof str !== 'string') {
     return false;
   }
@@ -222,17 +222,3 @@ function hasNameContent(str) {
   const tokens = str.trim().toLowerCase().split(/\s+/);
   return tokens.some(token => isValidNameToken(token));
 }
-
-module.exports = {
-  normalizeToken,
-  normalizePatientName,
-  normalizePatientId,
-  normalizeHiType,
-  normalizeGender,
-  normalizePhone,
-  normalizeEmail,
-  isValidNameToken,
-  hasNameContent,
-  TITLE_TOKENS,
-  INVALID_TOKENS,
-};

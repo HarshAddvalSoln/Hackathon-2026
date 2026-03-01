@@ -18,7 +18,7 @@ const MONTH_MAP = {
   dec: 11, december: 11,
 };
 
-function isValidDate(year, month, day) {
+export function isValidDate(year, month, day) {
   if (year < 1900 || year > 2100) return false;
   if (month < 1 || month > 12) return false;
   if (day < 1 || day > 31) return false;
@@ -26,7 +26,7 @@ function isValidDate(year, month, day) {
   return day <= daysInMonth;
 }
 
-function toFhirDate(dateStr) {
+export function toFhirDate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') {
     return null;
   }
@@ -87,7 +87,7 @@ function toFhirDate(dateStr) {
   return null;
 }
 
-function toFhirDateTime(dateTimeStr) {
+export function toFhirDateTime(dateTimeStr) {
   if (!dateTimeStr || typeof dateTimeStr !== 'string') {
     return null;
   }
@@ -110,19 +110,11 @@ function toFhirDateTime(dateTimeStr) {
   return null;
 }
 
-function getCurrentFhirDate() {
+export function getCurrentFhirDate() {
   const now = new Date();
   return now.toISOString().split('T')[0];
 }
 
-function getCurrentFhirDateTime() {
+export function getCurrentFhirDateTime() {
   return new Date().toISOString();
 }
-
-module.exports = {
-  toFhirDate,
-  toFhirDateTime,
-  getCurrentFhirDate,
-  getCurrentFhirDateTime,
-  isValidDate,
-};

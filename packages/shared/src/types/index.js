@@ -41,4 +41,4 @@
  * @property {Object[]} errors - Errors during processing
  */
 
-module.exports = {};
+export {};

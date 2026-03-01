@@ -7,7 +7,7 @@
  * @param {*} value - Value to check
  * @returns {boolean} True if non-empty string
  */
-function isNonEmptyString(value) {
+export function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
@@ -16,7 +16,7 @@ function isNonEmptyString(value) {
  * @param {string} email - Email to validate
  * @returns {boolean} True if valid email format
  */
-function isValidEmail(email) {
+export function isValidEmail(email) {
   if (!email || typeof email !== 'string') {
     return false;
   }
@@ -29,7 +29,7 @@ function isValidEmail(email) {
  * @param {string} phone - Phone to validate
  * @returns {boolean} True if valid phone format
  */
-function isValidPhone(phone) {
+export function isValidPhone(phone) {
   if (!phone || typeof phone !== 'string') {
     return false;
   }
@@ -43,7 +43,7 @@ function isValidPhone(phone) {
  * @param {string} dateStr - Date string to validate
  * @returns {boolean} True if valid date
  */
-function isValidDateString(dateStr) {
+export function isValidDateString(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') {
     return false;
   }
@@ -58,7 +58,7 @@ function isValidDateString(dateStr) {
  * @param {number} max - Maximum value (inclusive)
  * @returns {boolean} True if within range
  */
-function isInRange(value, min, max) {
+export function isInRange(value, min, max) {
   if (typeof value !== 'number' || isNaN(value)) {
     return false;
   }
@@ -71,7 +71,7 @@ function isInRange(value, min, max) {
  * @param {string[]} requiredProps - Array of required property names
  * @returns {Object} Result with isValid and missingProps
  */
-function hasRequiredProperties(obj, requiredProps) {
+export function hasRequiredProperties(obj, requiredProps) {
   if (!obj || typeof obj !== 'object') {
     return { isValid: false, missingProps: [...requiredProps] };
   }
@@ -92,7 +92,7 @@ function hasRequiredProperties(obj, requiredProps) {
  * @param {Array} arr - Array to validate
  * @returns {boolean} True if non-empty array
  */
-function isNonEmptyArray(arr) {
+export function isNonEmptyArray(arr) {
   return Array.isArray(arr) && arr.length > 0;
 }
 
@@ -102,7 +102,7 @@ function isNonEmptyArray(arr) {
  * @param {RegExp} pattern - Pattern to match
  * @returns {boolean} True if matches pattern
  */
-function matchesPattern(str, pattern) {
+export function matchesPattern(str, pattern) {
   if (!str || typeof str !== 'string' || !pattern) {
     return false;
   }
@@ -114,7 +114,7 @@ function matchesPattern(str, pattern) {
  * @param {Object} doc - Document object
  * @returns {Object} Result with isValid and errors
  */
-function validateDocument(doc) {
+export function validateDocument(doc) {
   const errors = [];
 
   if (!doc) {
@@ -141,7 +141,7 @@ function validateDocument(doc) {
  * @param {Object} claim - Claim data
  * @returns {Object} Result with isValid and errors
  */
-function validateClaimData(claim) {
+export function validateClaimData(claim) {
   const errors = [];
 
   if (!claim) {
@@ -162,16 +162,3 @@ function validateClaimData(claim) {
     errors,
   };
 }
-
-module.exports = {
-  isNonEmptyString,
-  isValidEmail,
-  isValidPhone,
-  isValidDateString,
-  isInRange,
-  hasRequiredProperties,
-  isNonEmptyArray,
-  matchesPattern,
-  validateDocument,
-  validateClaimData,
-};
